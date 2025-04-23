@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">My Subjects</h1>
+    
+    {% if subjects %}
+        <div class="row">
+            {% for subject in subjects %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ subject.code }} - {{ subject.name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Grade Level: {{ subject.grade_level }}</h6>
+                            <p class="card-text">{{ subject.description }}</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('teacher.subject_detail', subject_id=subject.id) }}" class="btn btn-primary">Manage Subject</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">You don't have any subjects assigned to you yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,294 @@
+# School Management System - Detailed Implementation Guide
+
+## Project Overview
+This is a comprehensive web-based School Management System built with Flask and SQLAlchemy that serves as a platform for schools to manage their administrative tasks, academic activities. The system supports multiple schools and implements a sophisticated role-based access control system with five distinct user roles: Super Admin, Admin, Teacher, Student, and Parent.
+
+## Technical Stack
+- **Backend Framework**: Flask (Python)
+- **Database ORM**: SQLAlchemy
+- **Authentication**: Flask-Login
+- **Password Hashing**: Bcrypt
+- **Frontend**: HTML, CSS, JavaScript
+- **Template Engine**: Jinja2
+- **Database**: SQLite (for development), can be configured for PostgreSQL or MySQL
+
+## System Architecture
+
+### Database Models
+
+1. **User Model**
+   - Fields: id, first_name, last_name, email, password_hash, created_at, updated_at, is_active
+   - Role implementation through UserRoles association table
+   - Role-specific relationships (teaching_subjects for teachers, enrollments for students, etc.)
+   - Implements password hashing and verification methods
+   - Role checking methods (is_admin, is_teacher, etc.)
+
+2. **School Model**
+   - Fields: id, name, address, city, state, zip_code, country, phone, email, website, description, logo, created_at, updated_at
+   - Relationships with users, subjects, schedules
+   - School settings and configuration options
+
+3. **Subject Model**
+   - Fields: id, school_id, code, name, description, grade_level, credits, created_at, updated_at
+   - Relationships with teachers (through TeacherSubject), students (through SubjectEnrollment)
+   - Associated schedules, assignments, tests, and grades
+
+4. **Schedule Model**
+   - Fields: id, school_id, name, description, start_date, end_date, created_at, updated_at
+   - Contains ScheduleItems (time slots for classes)
+
+5. **Assignment Model**
+   - Fields: id, subject_id, title, description, due_date, points, created_at, updated_at
+   - Tracks student submissions and grades
+
+6. **Test Model**
+   - Fields: id, subject_id, title, description, date, duration, points, created_at, updated_at
+   - Records student results
+
+7. **Grade Model**
+   - Fields: id, student_id, subject_id, assignment_id, test_id, points, comments, created_at, updated_at
+   - Tracks different types of assessments (assignments, tests, or general grades)
+
+8. **Attendance Model**
+   - Fields: id, student_id, subject_id, date, status, comment, created_at, updated_at
+   - Records student presence/absence in classes
+
+### User Roles and Access Control
+
+1. **Super Admin**
+   - Creates and manages schools
+   - Creates and manages school administrators
+   - Views system-wide analytics
+   - Configuration and settings management
+
+2. **Admin**
+   - School-specific administrator
+   - Manages teachers, students, and parents within their school
+   - Creates and manages subjects and schedules
+   - Assigns teachers to subjects
+   - Enrolls students in subjects
+   - School-level reporting and analytics
+
+3. **Teacher**
+   - Views assigned subjects and students
+   - Creates and manages assignments and tests
+   - Records and manages grades
+   - Takes attendance
+   - Views student submissions and performance
+
+4. **Student**
+   - Views enrolled subjects
+   - Views and submits assignments
+   - Takes tests
+   - Views grades and attendance records
+   - Views personal schedule
+
+5. **Parent**
+   - Links to one or more students as their children
+   - Views children's profiles, grades, and attendance
+   - Views children's schedules and subjects
+   - Communication with teachers (optional feature)
+
+### Application Structure
+
+1. **/app**
+   - Main application package
+
+2. **/app/models**
+   - Database models (user.py, school.py, subject.py, etc.)
+
+3. **/app/views**
+   - Blueprint-based route handlers:
+     - main.py - Public pages
+     - auth.py - Authentication routes
+     - super_admin.py - Super admin dashboard and features
+     - admin.py - School admin features
+     - teacher.py - Teacher features
+     - student.py - Student features
+     - parent.py - Parent features
+
+4. **/app/templates**
+   - HTML templates organized by user role
+   - Inherits from base.html for common layout
+
+5. **/app/static**
+   - CSS, JavaScript, and image assets
+
+6. **/app/utils**
+   - Helper functions and decorators
+   - Custom decorators for role-based access control
+
+## Key Features Implementation
+
+### Authentication System
+- User registration (admin-only for most roles)
+- Login and logout
+- Password change functionality
+- Role-based redirects to appropriate dashboards
+- Remember-me functionality
+- Password reset (optional)
+
+### Super Admin Features
+- School creation with detailed information
+- Admin user creation for each school
+- System-wide statistics and reporting
+- Configuration management
+
+### Admin Features
+- User management (create, edit, delete teachers, students, parents)
+- Subject creation and management
+- Schedule creation with recurring time slots
+- Teacher assignment to subjects
+- Student enrollment in subjects
+- School calendar management
+
+### Teacher Features
+- Dashboard with upcoming assignments and tests
+- Class rosters with student information
+- Assignment creation and management
+- Test creation and scheduling
+- Grade entry and management
+- Attendance tracking with different status options
+- Student performance reporting
+
+### Student Features
+- Dashboard with upcoming assignments and tests
+- Subject list with materials and resources
+- Assignment submission system
+- Test taking interface
+- Grade and attendance viewing
+- Schedule and calendar view
+
+### Parent Features
+- Multiple children management
+- Access to each child's academic information
+- Grade monitoring across subjects
+- Attendance tracking and history
+- Teacher contact information
+
+## Database Relationships
+
+1. **School-User Relationship**
+   - One-to-many (a school has many users)
+   - Users are assigned to a specific school
+
+2. **User Roles**
+   - Many-to-many through UserRoles association table
+   - Each user can have multiple roles (though typically one)
+
+3. **Parent-Student Relationship**
+   - Many-to-many through parent_student association table
+   - Parents can have multiple children, students can have multiple parents/guardians
+
+4. **Teacher-Subject Relationship**
+   - Many-to-many through TeacherSubject association table
+   - Teachers can teach multiple subjects, subjects can have multiple teachers
+
+5. **Student-Subject Relationship**
+   - Many-to-many through SubjectEnrollment association table
+   - Students can enroll in multiple subjects, subjects can have multiple students
+
+6. **Subject-Assignment/Test Relationship**
+   - One-to-many (a subject has many assignments/tests)
+
+7. **Student-Grade Relationship**
+   - One-to-many (a student has many grades)
+   - Grades are linked to specific assignments, tests, or subjects
+
+8. **Student-Attendance Relationship**
+   - One-to-many (a student has many attendance records)
+   - Attendance records are subject-specific
+
+## User Interface Design
+
+1. **General UI Components**
+   - Responsive navigation bar with role-specific menus
+   - Sidebar for quick access to common features
+   - Dashboard cards for summary information
+   - Tables with sorting and searching capabilities
+   - Forms with validation
+   - Modal dialogs for quick actions
+
+2. **Role-Specific UI**
+   - Each role has a customized dashboard
+   - Color-coding and icons for better usability
+   - Calendar views for schedules
+   - Progress indicators for grades and assignments
+
+## Security Considerations
+
+1. **Authentication Security**
+   - Password hashing with bcrypt
+   - CSRF protection on all forms
+   - Session management and secure cookies
+
+2. **Authorization**
+   - Decorator-based access control (@role_required)
+   - Database-level constraints on relationships
+   - Server-side validation of all actions
+
+3. **Data Protection**
+   - Input validation and sanitization
+   - SQLAlchemy ORM to prevent SQL injection
+   - Secure handling of sensitive information
+
+## Reporting and Analytics
+
+1. **Grade Analytics**
+   - Student performance tracking
+   - Class average comparisons
+   - Progress over time visualizations
+
+2. **Attendance Reporting**
+   - Absence trends and patterns
+   - Individual and class attendance rates
+
+3. **Administrative Reports**
+   - Enrollment statistics
+   - Teacher workload analysis
+   - Subject popularity and performance
+
+## Additional Features (Optional)
+
+1. **Messaging System**
+   - Internal communication between users
+   - Announcements and notifications
+
+2. **Calendar Integration**
+   - Synchronized events with assignments and tests
+   - Export functionality to external calendars
+
+3. **File Management**
+   - Upload and download of assignments and resources
+   - Document storage for teaching materials
+
+4. **Mobile Responsiveness**
+   - Fully responsive design for all devices
+   - Mobile-optimized views for key features
+
+## Implementation Approach
+
+1. **Database Setup**
+   - Define all models with relationships
+   - Create migration scripts for schema evolution
+   - Seed data for testing and demonstration
+
+2. **Authentication System**
+   - Implement login, logout, and role management
+   - Set up access control decorators
+
+3. **Core Functionality by Role**
+   - Implement features for each user role in priority order
+   - Create necessary templates and forms
+
+4. **UI Enhancements**
+   - Apply consistent styling and layout
+   - Implement JavaScript for interactive elements
+   - Ensure responsive design
+
+5. **Testing and Refinement**
+   - Unit tests for models and controllers
+   - Integration tests for workflows
+   - User acceptance testing
+
+Make the project correctly routed and seen the views. Make the good UI, as it was done by middle UI designer, don't use emojis, use only SVGs if needed. Make with green/blue/white color pallette, but if needed you can use another colors.

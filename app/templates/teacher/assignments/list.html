@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignments{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Assignments for {{ subject.name }}</h1>
+        <a href="{{ url_for('teacher.create_assignment', subject_id=subject.id) }}" class="btn btn-primary">Create New Assignment</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Active</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Upcoming</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Past</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Due Date</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                                <tr>
+                                    <td>{{ assignment.title }}</td>
+                                    <td>{{ assignment.due_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ assignment.points }}</td>
+                                    <td>
+                                        {% if assignment.due_date.date() < now.date() %}
+                                            <span class="badge bg-secondary">Past</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('teacher.edit_assignment', assignment_id=assignment.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a href="{{ url_for('teacher.view_submissions', assignment_id=assignment.id) }}" class="btn btn-sm btn-outline-success">Submissions</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No assignments found for this subject. Click the "Create New Assignment" button to create one.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

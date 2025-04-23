@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">My Subjects</h1>
+    
+    {% if subjects %}
+        <div class="row">
+            {% for subject in subjects %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ subject.code }} - {{ subject.name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Grade Level: {{ subject.grade_level }}</h6>
+                            <p class="card-text">{{ subject.description }}</p>
+                            <p class="text-muted">
+                                <strong>Teachers:</strong>
+                                {% for teacher in subject.teachers %}
+                                    {{ teacher.full_name }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('student.subject_detail', subject_id=subject.id) }}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">You are not enrolled in any subjects yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

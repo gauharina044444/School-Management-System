@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Grades - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Grades - {{ subject.name }}</h1>
+        <a href="{{ url_for('teacher.subject_detail', subject_id=subject.id) }}" class="btn btn-outline-secondary">Back to Subject</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Grade Average</th>
+                                <th>Assignments</th>
+                                <th>Tests</th>
+                                <th>Other Grades</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ student.full_name }}</td>
+                                    <td>
+                                        {% set grades = student_grades.get(student.id, []) %}
+                                        {% if grades %}
+                                            {% set total_points = namespace(value=0) %}
+                                            {% set total_max_points = namespace(value=0) %}
+                                            {% for grade in grades %}
+                                                {% set total_points.value = total_points.value + grade.points %}
+                                                {% if grade.assignment_id %}
+                                                    {% set total_max_points.value = total_max_points.value + grade.assignment.points %}
+                                                {% elif grade.test_id %}
+                                                    {% set total_max_points.value = total_max_points.value + grade.test.points %}
+                                                {% else %}
+                                                    {# For general grades without an assignment or test #}
+                                                    {% set total_max_points.value = total_max_points.value + 100 %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if total_max_points.value > 0 %}
+                                                {{ "%.1f"|format((total_points.value / total_max_points.value) * 100) }}%
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set assignment_grades = [] %}
+                                        {% for grade in student_grades.get(student.id, []) %}
+                                            {% if grade.assignment_id %}
+                                                {% set assignment_grades = assignment_grades + [grade] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ assignment_grades|length }} grades
+                                    </td>
+                                    <td>
+                                        {% set test_grades = [] %}
+                                        {% for grade in student_grades.get(student.id, []) %}
+                                            {% if grade.test_id %}
+                                                {% set test_grades = test_grades + [grade] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ test_grades|length }} grades
+                                    </td>
+                                    <td>
+                                        {% set other_grades = [] %}
+                                        {% for grade in student_grades.get(student.id, []) %}
+                                            {% if not grade.assignment_id and not grade.test_id %}
+                                                {% set other_grades = other_grades + [grade] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ other_grades|length }} grades
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('teacher.create_grade', subject_id=subject.id, student_id=student.id) }}" class="btn btn-sm btn-primary">Add Grade</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No students enrolled in this subject.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ current_user.school.name }} - Student Dashboard</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">My Subjects</h5>
+                    <p class="card-text display-4">{{ subjects_count }}</p>
+                    <a href="{{ url_for('student.subjects_list') }}" class="btn btn-primary">View Subjects</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Assignments</h5>
+                    <p class="card-text display-4">{{ assignments_count }}</p>
+                    <a href="{{ url_for('student.assignments_list') }}" class="btn btn-primary">View Assignments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tests</h5>
+                    <p class="card-text display-4">{{ tests_count }}</p>
+                    <a href="{{ url_for('student.tests_list') }}" class="btn btn-primary">View Tests</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">My Grades</h5>
+                    <p class="card-text display-4"><i class="fas fa-chart-bar"></i></p>
+                    <a href="{{ url_for('student.grades_list') }}" class="btn btn-primary">View Grades</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Assignments</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_assignments %}
+                        <ul class="list-group list-group-flush">
+                            {% for assignment in upcoming_assignments %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ assignment.title }}</strong>
+                                        <div class="text-muted small">{{ assignment.subject.name }}</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Due: {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">No upcoming assignments.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Tests</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_tests %}
+                        <ul class="list-group list-group-flush">
+                            {% for test in upcoming_tests %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ test.title }}</strong>
+                                        <div class="text-muted small">{{ test.subject.name }}</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Date: {{ test.date.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">No upcoming tests.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignment: {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ assignment.title }}</h1>
+        <div>
+            {% if subject_id %}
+                <a href="{{ url_for('student.assignments_list', subject_id=subject_id) }}" class="btn btn-outline-secondary">Back to Assignments</a>
+            {% else %}
+                <a href="{{ url_for('student.assignments_list') }}" class="btn btn-outline-secondary">Back to Assignments</a>
+            {% endif %}
+            {% if submission and assignment.due_date >= now %}
+                <a href="{{ url_for('student.edit_submission', submission_id=submission.id) }}" class="btn btn-primary">Edit Submission</a>
+            {% elif not submission and assignment.due_date >= now %}
+                <a href="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" class="btn btn-primary">Submit Assignment</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Assignment Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Subject:</dt>
+                        <dd class="col-sm-9">{{ assignment.subject.name }}</dd>
+                        
+                        <dt class="col-sm-3">Due Date:</dt>
+                        <dd class="col-sm-9">{{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                        
+                        <dt class="col-sm-3">Points:</dt>
+                        <dd class="col-sm-9">{{ assignment.points }}</dd>
+                        
+                        <dt class="col-sm-3">Status:</dt>
+                        <dd class="col-sm-9">
+                            {% if assignment.due_date < now %}
+                                {% if submission %}
+                                    <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Past Due</span>
+                                {% endif %}
+                            {% else %}
+                                {% if submission %}
+                                    <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            {% endif %}
+                        </dd>
+                    </dl>
+                    
+                    <h5 class="mt-4">Description</h5>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            {{ assignment.description | safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if submission %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Your Submission</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Submitted:</strong> {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% if submission.is_late %}
+                            <p class="text-danger"><strong>Submitted Late</strong></p>
+                        {% endif %}
+                        
+                        {% if submission.file_path %}
+                            <p><strong>File:</strong> <a href="{{ url_for('student.download_submission', submission_id=submission.id) }}">Download</a></p>
+                        {% endif %}
+                        
+                        {% if submission.submission_text %}
+                            <div class="mt-3">
+                                <h6>Submission Text:</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        {{ submission.submission_text }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if grade %}
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Grade</h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="text-center">{{ grade.points }} / {{ assignment.points }}</h2>
+                        <p class="text-center">{{ (grade.points / assignment.points * 100) | round(1) }}%</p>
+                        
+                        {% if grade.comments %}
+                            <div class="mt-3">
+                                <h6>Teacher Comments:</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        {{ grade.comments }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

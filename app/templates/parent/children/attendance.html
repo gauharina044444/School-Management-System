@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ child.full_name }}'s Attendance{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ child.full_name }}'s Attendance</h1>
+        <a href="{{ url_for('parent.child_detail', child_id=child.id) }}" class="btn btn-outline-secondary">Back to Child</a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Date Range: {{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}</h5>
+                <div class="btn-group">
+                    <a href="{{ url_for('parent.child_attendance', child_id=child.id, start_date=(start_date - timedelta(days=30)).strftime('%Y-%m-%d'), end_date=(end_date - timedelta(days=30)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-secondary">Previous Month</a>
+                    <a href="{{ url_for('parent.child_attendance', child_id=child.id, start_date=(start_date + timedelta(days=30)).strftime('%Y-%m-%d'), end_date=(end_date + timedelta(days=30)).strftime('%Y-%m-%d')) }}" class="btn btn-outline-secondary">Next Month</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="mb-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="start_date" class="col-form-label">From:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-auto">
+                        <label for="end_date" class="col-form-label">To:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-secondary">Go</button>
+                    </div>
+                </div>
+                <input type="hidden" name="child_id" value="{{ child.id }}">
+            </form>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Present</h5>
+                    <p class="card-text display-4">
+                        {% set present_count = namespace(value=0) %}
+                        {% for record in attendance_records %}
+                            {% if record.status == 'present' %}
+                                {% set present_count.value = present_count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ present_count.value }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Absent</h5>
+                    <p class="card-text display-4">
+                        {% set absent_count = namespace(value=0) %}
+                        {% for record in attendance_records %}
+                            {% if record.status == 'absent' %}
+                                {% set absent_count.value = absent_count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ absent_count.value }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Late</h5>
+                    <p class="card-text display-4">
+                        {% set late_count = namespace(value=0) %}
+                        {% for record in attendance_records %}
+                            {% if record.status == 'late' %}
+                                {% set late_count.value = late_count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ late_count.value }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Attendance Rate</h5>
+                    <p class="card-text display-4">
+                        {% if attendance_records %}
+                            {% set present_count = namespace(value=0) %}
+                            {% for record in attendance_records %}
+                                {% if record.status == 'present' %}
+                                    {% set present_count.value = present_count.value + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ ((present_count.value / attendance_records|length) * 100) | round(1) }}%
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#all-attendance" data-bs-toggle="tab">All Subjects</a>
+                </li>
+                {% for subject in subjects %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#subject-{{ subject.id }}" data-bs-toggle="tab">{{ subject.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="all-attendance">
+                    {% if attendance_records %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in attendance_records %}
+                                        <tr>
+                                            <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ record.subject.name }}</td>
+                                            <td>
+                                                {% if record.status == 'present' %}
+                                                    <span class="badge bg-success">Present</span>
+                                                {% elif record.status == 'absent' %}
+                                                    <span class="badge bg-danger">Absent</span>
+                                                {% elif record.status == 'late' %}
+                                                    <span class="badge bg-warning">Late</span>
+                                                {% elif record.status == 'excused' %}
+                                                    <span class="badge bg-info">Excused</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ record.comment if record.comment else '-' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No attendance records found for the selected period.</div>
+                    {% endif %}
+                </div>
+                
+                {% for subject in subjects %}
+                    <div class="tab-pane fade" id="subject-{{ subject.id }}">
+                        {% set subject_records = [] %}
+                        {% for record in attendance_records %}
+                            {% if record.subject_id == subject.id %}
+                                {% set subject_records = subject_records + [record] %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if subject_records %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Comments</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in subject_records %}
+                                            <tr>
+                                                <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                                                <td>
+                                                    {% if record.status == 'present' %}
+                                                        <span class="badge bg-success">Present</span>
+                                                    {% elif record.status == 'absent' %}
+                                                        <span class="badge bg-danger">Absent</span>
+                                                    {% elif record.status == 'late' %}
+                                                        <span class="badge bg-warning">Late</span>
+                                                    {% elif record.status == 'excused' %}
+                                                        <span class="badge bg-info">Excused</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ record.comment if record.comment else '-' }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">No attendance records found for this subject.</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
