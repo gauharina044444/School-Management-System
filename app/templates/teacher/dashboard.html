@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ current_user.school.name }} - Teacher Dashboard</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">My Subjects</h5>
+                    <p class="card-text display-4">{{ subjects|length }}</p>
+                    <a href="{{ url_for('teacher.subjects_list') }}" class="btn btn-primary">View Subjects</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Assignments</h5>
+                    <p class="card-text display-4">{{ upcoming_assignments|length }}</p>
+                    {% if subjects %}
+                        <a href="{{ url_for('teacher.assignments_list', subject_id=subjects[0].id) }}" class="btn btn-primary">View Assignments</a>
+                    {% else %}
+                        <a href="#" class="btn btn-secondary disabled">View Assignments</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tests</h5>
+                    <p class="card-text display-4">{{ upcoming_tests|length }}</p>
+                    {% if subjects %}
+                        <a href="{{ url_for('teacher.tests_list', subject_id=subjects[0].id) }}" class="btn btn-primary">View Tests</a>
+                    {% else %}
+                        <a href="#" class="btn btn-secondary disabled">View Tests</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Attendance</h5>
+                    <p class="card-text display-4"><i class="fas fa-clipboard-check"></i></p>
+                    {% if subjects %}
+                        <a href="{{ url_for('teacher.attendance_list', subject_id=subjects[0].id) }}" class="btn btn-primary">Take Attendance</a>
+                    {% else %}
+                        <a href="#" class="btn btn-secondary disabled">Take Attendance</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assignments</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_assignments %}
+                        <ul class="list-group list-group-flush">
+                            {% for assignment in upcoming_assignments %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ assignment.title }}</strong>
+                                        <div class="text-muted small">{{ assignment.subject.name }}</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Due: {{ assignment.due_date.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">No assignments created yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Tests</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_tests %}
+                        <ul class="list-group list-group-flush">
+                            {% for test in upcoming_tests %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ test.title }}</strong>
+                                        <div class="text-muted small">{{ test.subject.name }}</div>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Date: {{ test.date.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">No tests created yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

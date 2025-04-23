@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Tests - {{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Tests for {{ subject.name }}</h1>
+        <a href="{{ url_for('teacher.create_test', subject_id=subject.id) }}" class="btn btn-primary">Create New Test</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-light">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Upcoming</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Past</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            {% if tests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in tests %}
+                                <tr>
+                                    <td>{{ test.title }}</td>
+                                    <td>{{ test.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ test.duration }} minutes</td>
+                                    <td>{{ test.points }}</td>
+                                    <td>
+                                        {% if test.date.date() < now.date() %}
+                                            <span class="badge bg-secondary">Past</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('teacher.edit_test', test_id=test.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a href="{{ url_for('teacher.test_grades', test_id=test.id) }}" class="btn btn-sm btn-outline-success">Grades</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No tests found for this subject. Click the "Create New Test" button to create one.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

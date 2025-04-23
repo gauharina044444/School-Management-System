@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Subjects List{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Subjects</h1>
+        <a href="{{ url_for('admin.create_subject') }}" class="btn btn-primary">Add New Subject</a>
+    </div>
+    
+    {% if subjects %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Grade Level</th>
+                                <th>Credits</th>
+                                <th>Teachers</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                                <tr>
+                                    <td>{{ subject.code }}</td>
+                                    <td>{{ subject.name }}</td>
+                                    <td>{{ subject.grade_level }}</td>
+                                    <td>{{ subject.credits }}</td>
+                                    <td>
+                                        {% for teacher in subject.teachers %}
+                                            <span class="badge bg-info">{{ teacher.full_name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No teachers assigned</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a href="{{ url_for('admin.subject_students', subject_id=subject.id) }}" class="btn btn-sm btn-outline-info">Manage Students</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No subjects found. Click the "Add New Subject" button to create one.</div>
+    {% endif %}
+</div>
+{% endblock %}

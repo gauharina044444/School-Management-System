@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Parents List{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Parents</h1>
+        <a href="{{ url_for('admin.create_parent') }}" class="btn btn-primary">Add New Parent</a>
+    </div>
+    
+    {% if parents %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Children</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for parent in parents %}
+                                <tr>
+                                    <td>{{ parent.id }}</td>
+                                    <td>{{ parent.full_name }}</td>
+                                    <td>{{ parent.email }}</td>
+                                    <td>{{ parent.children.count() }} children</td>
+                                    <td>
+                                        {% if parent.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.edit_parent', parent_id=parent.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <a href="{{ url_for('admin.parent_children', parent_id=parent.id) }}" class="btn btn-sm btn-outline-info">Children</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No parents found. Click the "Add New Parent" button to create one.</div>
+    {% endif %}
+</div>
+{% endblock %}

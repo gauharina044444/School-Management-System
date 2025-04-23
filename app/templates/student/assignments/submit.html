@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Assignment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">Submit Assignment: {{ assignment.title }}</h1>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <dl class="row">
+                            <dt class="col-sm-3">Subject:</dt>
+                            <dd class="col-sm-9">{{ assignment.subject.name }}</dd>
+                            
+                            <dt class="col-sm-3">Due Date:</dt>
+                            <dd class="col-sm-9">{{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</dd>
+                            
+                            <dt class="col-sm-3">Points:</dt>
+                            <dd class="col-sm-9">{{ assignment.points }}</dd>
+                        </dl>
+                        
+                        <h5>Description</h5>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                {{ assignment.description | safe }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="form-group mb-3">
+                            {{ form.submission_file.label(class="form-label") }}
+                            {{ form.submission_file(class="form-control") }}
+                            {% if form.submission_file.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.submission_file.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional. Upload a file for your assignment submission.</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.submission_text.label(class="form-label") }}
+                            {{ form.submission_text(class="form-control", rows=5) }}
+                            {% if form.submission_text.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.submission_text.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional. Enter text for your assignment submission.</small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <p class="mb-0">
+                                <i class="fas fa-info-circle"></i> At least one of submission file or text is required.
+                                {% if now > assignment.due_date %}
+                                    <strong>NOTE: This assignment is past due. Your submission will be marked as late.</strong>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('student.assignment_detail', assignment_id=assignment.id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Submit Assignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
