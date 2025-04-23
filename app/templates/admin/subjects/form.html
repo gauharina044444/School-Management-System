@@ -2,187 +2,333 @@
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block styles %}
+<style>
+    /* Custom styling for multi-select */
+    .student-select-container {
+        position: relative;
+        background-color: #fff;
+    }
+    
+    #studentSelect option, #teacherSelect option {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    #studentSelect option:hover, #teacherSelect option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #studentSelect option:checked {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    #teacherSelect option:checked {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+    
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        border-bottom: 3px solid;
+    }
+    
+    .card-header.basic-info {
+        border-bottom-color: #6c757d;
+    }
+    
+    .card-header.teachers-info {
+        border-bottom-color: #0d6efd;
+    }
+    
+    .card-header.students-info {
+        border-bottom-color: #198754;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-floating > .form-control {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+    }
+    
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .btn-group {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .float-badge {
+            position: static !important;
+            margin-top: 10px;
+            width: 100%;
+            display: block;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="h3 mb-0">{{ title }}</h1>
+        <div class="col-lg-10">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.subjects_list') }}">Subjects</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-book me-2"></i>{{ title }}
+                    </h1>
+                    <a href="{{ url_for('admin.subjects_list') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Subjects
+                    </a>
                 </div>
-                <div class="card-body">
+                
+                <div class="card-body p-4">
                     <form method="POST">
                         {{ form.hidden_tag() }}
                         
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    {{ form.code.label(class="form-label") }}
-                                    {{ form.code(class="form-control") }}
-                                    {% if form.code.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.code.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
+                        <!-- Subject Information -->
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-light basic-info py-3">
+                                <h5 class="mb-0 text-dark">
+                                    <i class="fas fa-info-circle me-2"></i>Subject Information
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <div class="form-floating">
+                                            {{ form.code(class="form-control", placeholder="e.g., MATH101", id="codeInput") }}
+                                            {{ form.code.label(class="required-field", for="codeInput") }}
+                                            {% if form.code.errors %}
+                                                <div class="text-danger mt-2">
+                                                    {% for error in form.code.errors %}
+                                                        <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    {{ form.name.label(class="form-label") }}
-                                    {{ form.name(class="form-control") }}
-                                    {% if form.name.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.name.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-floating">
+                                            {{ form.name(class="form-control", placeholder="e.g., Introduction to Mathematics", id="nameInput") }}
+                                            {{ form.name.label(class="required-field", for="nameInput") }}
+                                            {% if form.name.errors %}
+                                                <div class="text-danger mt-2">
+                                                    {% for error in form.name.errors %}
+                                                        <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                    {% endif %}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            {{ form.description.label(class="form-label") }}
-                            {{ form.description(class="form-control", rows=3) }}
-                            {% if form.description.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.description.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    {{ form.grade_level.label(class="form-label") }}
-                                    {{ form.grade_level(class="form-control") }}
-                                    {% if form.grade_level.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.grade_level.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    {{ form.credits.label(class="form-label") }}
-                                    {{ form.credits(class="form-control") }}
-                                    {% if form.credits.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.credits.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            {{ form.teachers.label(class="form-label") }}
-                            {{ form.teachers(class="form-select", multiple=true, size=5) }}
-                            {% if form.teachers.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.teachers.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple teachers</small>
-                        </div>
-                        
-                        {% if form.students is defined %}
-                        <div class="form-group mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label mb-0">Enroll Students</label>
-                                <div class="input-group" style="max-width: 300px;">
-                                    <input type="text" id="studentSearch" class="form-control form-control-sm" placeholder="Search students...">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSearch">Clear</button>
-                                </div>
-                            </div>
-                            {{ form.students(class="form-select", multiple=true, size=10, id="studentSelect") }}
-                            {% if form.students.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.students.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple students</small>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">Select All</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">Deselect All</button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if form.students is defined %}
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const studentSearch = document.getElementById('studentSearch');
-                                const studentSelect = document.getElementById('studentSelect');
-                                const clearSearch = document.getElementById('clearSearch');
-                                const selectAll = document.getElementById('selectAll');
-                                const deselectAll = document.getElementById('deselectAll');
                                 
-                                if (studentSelect && studentSearch && clearSearch && selectAll && deselectAll) {
-                                    // Search functionality
-                                    studentSearch.addEventListener('input', function() {
-                                        const searchValue = this.value.toLowerCase();
-                                        const options = studentSelect.options;
-                                        
-                                        for (let i = 0; i < options.length; i++) {
-                                            const optionText = options[i].text.toLowerCase();
-                                            if (optionText.includes(searchValue)) {
-                                                options[i].style.display = '';
-                                            } else {
-                                                options[i].style.display = 'none';
-                                            }
-                                        }
-                                    });
+                                <div class="form-floating mb-3">
+                                    {{ form.description(class="form-control", style="height: 100px;", placeholder="Provide a brief description of this subject...", id="descriptionInput") }}
+                                    {{ form.description.label(for="descriptionInput") }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger mt-2">
+                                            {% for error in form.description.errors %}
+                                                <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.grade_level(class="form-control", placeholder="e.g., Grade 10", id="gradeLevelInput") }}
+                                            {{ form.grade_level.label(for="gradeLevelInput") }}
+                                            {% if form.grade_level.errors %}
+                                                <div class="text-danger mt-2">
+                                                    {% for error in form.grade_level.errors %}
+                                                        <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.credits(class="form-control", placeholder="e.g., 3.0", id="creditsInput") }}
+                                            {{ form.credits.label(for="creditsInput") }}
+                                            {% if form.credits.errors %}
+                                                <div class="text-danger mt-2">
+                                                    {% for error in form.credits.errors %}
+                                                        <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Teachers assignment section -->
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-light teachers-info py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-chalkboard-teacher me-2"></i>
+                                    {{ form.teachers.label.text }}
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="alert alert-info mb-3 d-flex align-items-center">
+                                    <i class="fas fa-info-circle fa-lg me-3"></i> 
+                                    <div>
+                                        Hold <strong>Ctrl</strong> (or <strong>Cmd</strong> on Mac) to select multiple teachers. 
+                                        <span class="text-danger">At least one teacher must be assigned.</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" id="teacherSearch" class="form-control" placeholder="Search teachers by name...">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearTeacherSearch">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Type to filter the teacher list below</div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-7">
+                                        <div class="d-flex gap-2 mb-2">
+                                            <div class="badge bg-primary rounded-pill px-3 py-2" id="selectedTeachersCount">0 teachers selected</div>
+                                            <div class="badge bg-secondary rounded-pill px-3 py-2" id="totalTeachersCount">0 total teachers</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 text-end">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-primary" id="selectAllTeachers">
+                                                <i class="fas fa-check-square me-1"></i> Select All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllTeachers">
+                                                <i class="fas fa-times-circle me-1"></i> Deselect All
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border rounded" style="max-height: 200px; overflow-y: auto;">
+                                    {{ form.teachers(class="form-select", multiple=true, size=5, id="teacherSelect", style="border: none; height: 100%;") }}
+                                </div>
+                                
+                                {% if form.teachers.errors %}
+                                    <div class="text-danger mt-2">
+                                        {% for error in form.teachers.errors %}
+                                            <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Students enrollment section -->
+                        {% if form.students is defined %}
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-light students-info py-3">
+                                <h5 class="mb-0 text-success">
+                                    <i class="fas fa-user-graduate me-2"></i>
+                                    Student Enrollment
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="alert alert-success mb-3 d-flex align-items-center">
+                                    <i class="fas fa-lightbulb fa-lg me-3"></i>
+                                    <div>
+                                        Enroll students in this subject. Students will be able to access materials and assignments for this subject once enrolled.
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" id="studentSearch" class="form-control" placeholder="Search students by name or email...">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSearch">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Type to filter the student list below</div>
+                                </div>
+                                
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                                    <div>
+                                        <div class="badge bg-success rounded-pill px-3 py-2 float-badge" id="selectedCount">0 students selected</div>
+                                        <div class="badge bg-secondary rounded-pill px-3 py-2 float-badge" id="totalCount">0 total students</div>
+                                        <div class="badge bg-info rounded-pill px-3 py-2 float-badge" id="filteredCount" style="display: none;">0 students matching filter</div>
+                                    </div>
                                     
-                                    // Clear search
-                                    clearSearch.addEventListener('click', function() {
-                                        studentSearch.value = '';
-                                        const options = studentSelect.options;
-                                        for (let i = 0; i < options.length; i++) {
-                                            options[i].style.display = '';
-                                        }
-                                    });
-                                    
-                                    // Select all visible students
-                                    selectAll.addEventListener('click', function() {
-                                        const options = studentSelect.options;
-                                        for (let i = 0; i < options.length; i++) {
-                                            if (options[i].style.display !== 'none') {
-                                                options[i].selected = true;
-                                            }
-                                        }
-                                    });
-                                    
-                                    // Deselect all students
-                                    deselectAll.addEventListener('click', function() {
-                                        const options = studentSelect.options;
-                                        for (let i = 0; i < options.length; i++) {
-                                            options[i].selected = false;
-                                        }
-                                    });
-                                }
-                            });
-                        </script>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-success" id="selectAll">
+                                            <i class="fas fa-check-square me-1"></i> Select All Visible
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="selectNone">
+                                            <i class="fas fa-times-circle me-1"></i> Deselect All
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggleSelected">
+                                            <i class="fas fa-exchange-alt me-1"></i> Toggle Selection
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="student-select-container border rounded" style="max-height: 300px; overflow-y: auto;">
+                                    {{ form.students(class="form-select", multiple=true, size=10, id="studentSelect", style="border: none; height: 100%;") }}
+                                </div>
+                                
+                                {% if form.students.errors %}
+                                    <div class="text-danger mt-2">
+                                        {% for error in form.students.errors %}
+                                            <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endif %}
                         
-                        <div class="d-flex justify-content-between">
-                            <a href="/admin/subjects" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Save</button>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('admin.subjects_list') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-1"></i> {{ form.submit.label.text }}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -190,4 +336,236 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+{% if form.students is defined %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Student elements
+        const studentSearch = document.getElementById('studentSearch');
+        const studentSelect = document.getElementById('studentSelect');
+        const clearSearch = document.getElementById('clearSearch');
+        const selectAll = document.getElementById('selectAll');
+        const selectNone = document.getElementById('selectNone');
+        const toggleSelected = document.getElementById('toggleSelected');
+        const selectedCount = document.getElementById('selectedCount');
+        const totalCount = document.getElementById('totalCount');
+        const filteredCount = document.getElementById('filteredCount');
+        
+        // Teacher elements
+        const teacherSearch = document.getElementById('teacherSearch');
+        const teacherSelect = document.getElementById('teacherSelect');
+        const clearTeacherSearch = document.getElementById('clearTeacherSearch');
+        const selectAllTeachers = document.getElementById('selectAllTeachers');
+        const deselectAllTeachers = document.getElementById('deselectAllTeachers');
+        const selectedTeachersCount = document.getElementById('selectedTeachersCount');
+        const totalTeachersCount = document.getElementById('totalTeachersCount');
+        
+        // Initialize teacher counts
+        if (teacherSelect && selectedTeachersCount && totalTeachersCount) {
+            updateTeacherCounters();
+            
+            // Teacher search functionality
+            teacherSearch.addEventListener('input', function() {
+                filterOptions(this.value.toLowerCase(), teacherSelect);
+                updateTeacherCounters();
+            });
+            
+            // Clear teacher search
+            clearTeacherSearch.addEventListener('click', function() {
+                teacherSearch.value = '';
+                resetFilter(teacherSelect);
+                updateTeacherCounters();
+                teacherSearch.focus();
+            });
+            
+            // Select all visible teachers
+            selectAllTeachers.addEventListener('click', function() {
+                selectAllVisible(teacherSelect);
+                updateTeacherCounters();
+            });
+            
+            // Deselect all teachers
+            deselectAllTeachers.addEventListener('click', function() {
+                deselectAll(teacherSelect);
+                updateTeacherCounters();
+            });
+            
+            // Update counters when selection changes
+            teacherSelect.addEventListener('change', function() {
+                updateTeacherCounters();
+            });
+        }
+        
+        // Initialize student counts
+        if (studentSelect && studentSearch && clearSearch && selectAll && selectNone) {
+            updateStudentCounters();
+            
+            // Student search functionality
+            studentSearch.addEventListener('input', function() {
+                filterOptions(this.value.toLowerCase(), studentSelect);
+                updateStudentCounters();
+            });
+            
+            // Clear student search
+            clearSearch.addEventListener('click', function() {
+                studentSearch.value = '';
+                resetFilter(studentSelect);
+                updateStudentCounters();
+                studentSearch.focus();
+            });
+            
+            // Select all visible students
+            selectAll.addEventListener('click', function() {
+                selectAllVisible(studentSelect);
+                updateStudentCounters();
+            });
+            
+            // Deselect all students
+            selectNone.addEventListener('click', function() {
+                deselectAll(studentSelect);
+                updateStudentCounters();
+            });
+            
+            // Toggle selection (select unselected, deselect selected)
+            toggleSelected.addEventListener('click', function() {
+                toggleSelection(studentSelect);
+                updateStudentCounters();
+            });
+            
+            // Update counters when selection changes
+            studentSelect.addEventListener('change', function() {
+                updateStudentCounters();
+            });
+        }
+        
+        // Function to update the student counters
+        function updateStudentCounters() {
+            if (!studentSelect) return;
+            
+            const options = studentSelect.options;
+            let selectedTotal = 0;
+            let visibleCount = 0;
+            
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].style.display !== 'none') {
+                    visibleCount++;
+                    if (options[i].selected) {
+                        selectedTotal++;
+                    }
+                }
+            }
+            
+            selectedCount.textContent = `${selectedTotal} students selected`;
+            totalCount.textContent = `${options.length} total students`;
+            
+            // Show filtered count only when filtering is active
+            if (studentSearch.value.trim() !== '') {
+                filteredCount.textContent = `${visibleCount} students matching filter`;
+                filteredCount.style.display = 'inline-block';
+            } else {
+                filteredCount.style.display = 'none';
+            }
+            
+            // Change badge color based on selection
+            if (selectedTotal > 0) {
+                selectedCount.classList.remove('bg-primary', 'bg-danger');
+                selectedCount.classList.add('bg-success');
+            } else {
+                selectedCount.classList.remove('bg-success');
+                selectedCount.classList.add('bg-danger');
+            }
+            
+            // Update button states
+            selectAll.disabled = visibleCount === 0;
+            selectNone.disabled = selectedTotal === 0;
+            toggleSelected.disabled = visibleCount === 0;
+        }
+        
+        // Function to update the teacher counters
+        function updateTeacherCounters() {
+            if (!teacherSelect) return;
+            
+            const options = teacherSelect.options;
+            let selectedTotal = 0;
+            let visibleCount = 0;
+            
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].style.display !== 'none') {
+                    visibleCount++;
+                    if (options[i].selected) {
+                        selectedTotal++;
+                    }
+                }
+            }
+            
+            selectedTeachersCount.textContent = `${selectedTotal} teachers selected`;
+            totalTeachersCount.textContent = `${options.length} total teachers`;
+            
+            // Change badge color based on selection
+            if (selectedTotal > 0) {
+                selectedTeachersCount.classList.remove('bg-danger');
+                selectedTeachersCount.classList.add('bg-primary');
+            } else {
+                selectedTeachersCount.classList.remove('bg-primary');
+                selectedTeachersCount.classList.add('bg-danger');
+            }
+            
+            // Update button states
+            selectAllTeachers.disabled = visibleCount === 0;
+            deselectAllTeachers.disabled = selectedTotal === 0;
+        }
+        
+        // Filter options in a select element
+        function filterOptions(searchValue, selectElement) {
+            const options = selectElement.options;
+            for (let i = 0; i < options.length; i++) {
+                const optionText = options[i].text.toLowerCase();
+                if (optionText.includes(searchValue)) {
+                    options[i].style.display = '';
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+        }
+        
+        // Reset filter on a select element
+        function resetFilter(selectElement) {
+            const options = selectElement.options;
+            for (let i = 0; i < options.length; i++) {
+                options[i].style.display = '';
+            }
+        }
+        
+        // Select all visible options
+        function selectAllVisible(selectElement) {
+            const options = selectElement.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].style.display !== 'none') {
+                    options[i].selected = true;
+                }
+            }
+        }
+        
+        // Deselect all options
+        function deselectAll(selectElement) {
+            const options = selectElement.options;
+            for (let i = 0; i < options.length; i++) {
+                options[i].selected = false;
+            }
+        }
+        
+        // Toggle selection for visible options
+        function toggleSelection(selectElement) {
+            const options = selectElement.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].style.display !== 'none') {
+                    options[i].selected = !options[i].selected;
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
 {% endblock %}
