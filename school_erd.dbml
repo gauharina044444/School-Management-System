@@ -1,0 +1,172 @@
+// School Management System Entity Relationship Diagram
+// For use with dbdiagram.io
+
+// School table
+Table School {
+  id int [pk, increment]
+  name varchar [not null]
+  address varchar
+  city varchar
+  state varchar
+  zip_code varchar
+  country varchar
+  phone varchar
+  email varchar
+  website varchar
+  description text
+  logo varchar
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Role table
+Table Role {
+  id int [pk, increment]
+  name varchar [unique, not null]
+}
+
+// User table
+Table User {
+  id int [pk, increment]
+  school_id int [ref: > School.id]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  email varchar [unique, not null]
+  password_hash varchar [not null]
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Association tables
+Table user_roles {
+  user_id int [pk, ref: > User.id]
+  role_id int [pk, ref: > Role.id]
+}
+
+Table parent_student {
+  parent_id int [pk, ref: > User.id]
+  student_id int [pk, ref: > User.id]
+}
+
+Table teacher_subject {
+  teacher_id int [pk, ref: > User.id]
+  subject_id int [pk, ref: > Subject.id]
+}
+
+Table subject_enrollment {
+  student_id int [pk, ref: > User.id]
+  subject_id int [pk, ref: > Subject.id]
+}
+
+// Subject table
+Table Subject {
+  id int [pk, increment]
+  school_id int [ref: > School.id, not null]
+  code varchar [not null]
+  name varchar [not null]
+  description text
+  grade_level varchar
+  credits float [default: 0]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Schedule tables
+Table Schedule {
+  id int [pk, increment]
+  school_id int [ref: > School.id, not null]
+  name varchar [not null]
+  description text
+  start_date date [not null]
+  end_date date [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+Table ScheduleItem {
+  id int [pk, increment]
+  schedule_id int [ref: > Schedule.id, not null]
+  subject_id int [ref: > Subject.id, not null]
+  day_of_week int [not null, note: '0=Monday, 1=Tuesday, etc.']
+  start_time time [not null]
+  end_time time [not null]
+  location varchar
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Assignment tables
+Table Assignment {
+  id int [pk, increment]
+  subject_id int [ref: > Subject.id, not null]
+  title varchar [not null]
+  description text
+  due_date timestamp [not null]
+  points float [default: 0]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+Table AssignmentSubmission {
+  id int [pk, increment]
+  assignment_id int [ref: > Assignment.id, not null]
+  student_id int [ref: > User.id, not null]
+  file_path varchar
+  submission_text text
+  submitted_at timestamp [default: `now()`]
+  is_late boolean [default: false]
+}
+
+// Test table
+Table Test {
+  id int [pk, increment]
+  subject_id int [ref: > Subject.id, not null]
+  title varchar [not null]
+  description text
+  date timestamp [not null]
+  duration int [note: 'in minutes']
+  points float [default: 0]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Grade table
+Table Grade {
+  id int [pk, increment]
+  student_id int [ref: > User.id, not null]
+  subject_id int [ref: > Subject.id, not null]
+  assignment_id int [ref: > Assignment.id]
+  test_id int [ref: > Test.id]
+  points float [not null]
+  comments text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Attendance table
+Table Attendance {
+  id int [pk, increment]
+  student_id int [ref: > User.id, not null]
+  subject_id int [ref: > Subject.id, not null]
+  date date [not null]
+  status varchar [not null, default: 'present', note: 'present, absent, late, excused']
+  comment text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`, onupdate: `now()`]
+}
+
+// Indexes
+Indexes {
+  (User.email) [unique]
+  (Subject.school_id, Subject.code) [unique]
+  (Attendance.student_id, Attendance.subject_id, Attendance.date) [unique]
+}
+
+// Relationships
+Ref: "User"."id" < "Grade"."student_id"
+Ref: "Subject"."id" < "Grade"."subject_id"
+Ref: "Assignment"."id" < "Grade"."assignment_id"
+Ref: "Test"."id" < "Grade"."test_id"
+Ref: "User"."id" < "Attendance"."student_id"
+Ref: "Subject"."id" < "Attendance"."subject_id"
