@@ -5,7 +5,7 @@ from app.models.user import User, Role
 from app.models.subject import Subject
 from app.models.schedule import Schedule, ScheduleItem
 from app.utils.access_control import admin_required
-from app.forms.admin_forms import UserForm, SubjectForm, ScheduleForm, ScheduleItemForm
+from app.forms.admin_forms import UserForm, SubjectForm, ScheduleForm, ScheduleItemForm, StudentEnrollmentForm
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -180,37 +180,120 @@ def subjects_list():
 @login_required
 @admin_required
 def create_subject():
-    form = SubjectForm()
-    
-    # Get teachers for this school
-    teachers = User.query.filter_by(school_id=current_user.school_id).join(User.roles).filter(Role.name == 'teacher').all()
-    form.teachers.choices = [(t.id, t.full_name) for t in teachers]
-    
-    if form.validate_on_submit():
-        subject = Subject(
-            school_id=current_user.school_id,
-            code=form.code.data,
-            name=form.name.data,
-            description=form.description.data,
-            grade_level=form.grade_level.data,
-            credits=form.credits.data
-        )
+    try:
+        form = SubjectForm()
         
-        # Add teachers
-        for teacher_id in form.teachers.data:
-            teacher = User.query.get(teacher_id)
-            if teacher and teacher.is_teacher():
-                subject.teachers.append(teacher)
+        # Get teachers for this school
+        teachers = User.query.filter_by(school_id=current_user.school_id).join(User.roles).filter(Role.name == 'teacher').all()
+        form.teachers.choices = [(t.id, t.full_name) for t in teachers]
         
-        db.session.add(subject)
-        db.session.commit()
+        # Get students for this school
+        students = User.query.filter_by(school_id=current_user.school_id).join(User.roles).filter(Role.name == 'student').order_by(User.last_name).all()
+        form.students.choices = [(s.id, f"{s.full_name} ({s.email})") for s in students]
         
-        flash(f'Subject "{subject.name}" has been created successfully!', 'success')
-        return redirect(url_for('admin.subjects_list'))
-    
-    return render_template('admin/subjects/form.html', form=form, title='Create Subject')
+        if form.validate_on_submit():
+            subject = Subject(
+                school_id=current_user.school_id,
+                code=form.code.data,
+                name=form.name.data,
+                description=form.description.data,
+                grade_level=form.grade_level.data,
+                credits=form.credits.data
+            )
+            
+            # Add teachers
+            for teacher_id in form.teachers.data:
+                teacher = User.query.get(teacher_id)
+                if teacher and teacher.is_teacher():
+                    subject.teachers.append(teacher)
+            
+            # Add students
+            if form.students and form.students.data:
+                for student_id in form.students.data:
+                    student = User.query.get(student_id)
+                    if student and student.is_student():
+                        subject.students.append(student)
+            
+            db.session.add(subject)
+            db.session.commit()
+            
+            flash(f'Subject "{subject.name}" has been created successfully!', 'success')
+            return redirect('/admin/subjects')
+        
+        return render_template('admin/subjects/form.html', form=form, title='Create Subject')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {str(e)}', 'danger')
+        return redirect('/admin/subjects')
 
-@admin.route('/subjects/<int:subject_id>/students', methods=['GET'])
+@admin.route('/subjects/<int:subject_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_subject(subject_id):
+    try:
+        subject = Subject.query.get_or_404(subject_id)
+        
+        # Verify subject belongs to admin's school
+        if subject.school_id != current_user.school_id:
+            flash('You do not have permission to edit this subject.', 'danger')
+            return redirect('/admin/subjects')
+        
+        form = SubjectForm(obj=subject)
+        
+        # Get teachers for this school
+        teachers = User.query.filter_by(school_id=current_user.school_id).join(User.roles).filter(Role.name == 'teacher').all()
+        form.teachers.choices = [(t.id, t.full_name) for t in teachers]
+        
+        # Get students for this school
+        students = User.query.filter_by(school_id=current_user.school_id).join(User.roles).filter(Role.name == 'student').order_by(User.last_name).all()
+        form.students.choices = [(s.id, f"{s.full_name} ({s.email})") for s in students]
+        
+        # Pre-select current teachers and students
+        if request.method == 'GET':
+            form.teachers.data = [teacher.id for teacher in subject.teachers]
+            form.students.data = [student.id for student in subject.students]
+        
+        if form.validate_on_submit():
+            subject.code = form.code.data
+            subject.name = form.name.data
+            subject.description = form.description.data
+            subject.grade_level = form.grade_level.data
+            subject.credits = form.credits.data
+            
+            # Update teachers
+            subject.teachers = []
+            for teacher_id in form.teachers.data:
+                teacher = User.query.get(teacher_id)
+                if teacher and teacher.is_teacher():
+                    subject.teachers.append(teacher)
+            
+            # Update students
+            subject.students = []
+            if form.students and form.students.data:
+                for student_id in form.students.data:
+                    student = User.query.get(student_id)
+                    if student and student.is_student():
+                        subject.students.append(student)
+            
+            db.session.commit()
+            
+            flash(f'Subject "{subject.name}" has been updated successfully!', 'success')
+            return redirect('/admin/subjects')
+        
+        return render_template('admin/subjects/form.html', form=form, subject=subject, title='Edit Subject')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {str(e)}', 'danger')
+        return redirect('/admin/subjects')
+
+# Keep this route for compatibility
+@admin.route('/subjects/<int:subject_id>/update', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def update_subject(subject_id):
+    return redirect(f'/admin/subjects/{subject_id}/edit')
+
+@admin.route('/subjects/<int:subject_id>/students', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def subject_students(subject_id):
@@ -226,68 +309,105 @@ def subject_students(subject_id):
     # Get IDs of enrolled students
     enrolled_student_ids = [student.id for student in subject.students]
     
+    # Create form for batch enrollment
+    batch_form = StudentEnrollmentForm()
+    
+    # Get available students for the form choices
+    available_students = [s for s in students if s.id not in enrolled_student_ids]
+    batch_form.student_ids.choices = [(s.id, f"{s.full_name} ({s.email})") for s in available_students]
+    
+    if batch_form.validate_on_submit():
+        added_count = 0
+        for student_id in batch_form.student_ids.data:
+            student = User.query.get(student_id)
+            # Verify this is a valid student at this school
+            if student and student.is_student() and student.school_id == current_user.school_id:
+                # Check if not already enrolled
+                if student not in subject.students:
+                    subject.students.append(student)
+                    added_count += 1
+        
+        if added_count > 0:
+            db.session.commit()
+            flash(f'Successfully enrolled {added_count} students in {subject.name}.', 'success')
+            return redirect(url_for('admin.subject_students', subject_id=subject_id))
+        else:
+            flash('No new students were enrolled. They may already be enrolled or invalid selections were made.', 'warning')
+    
     return render_template(
         'admin/subjects/students.html',
         subject=subject,
         students=students,
-        enrolled_student_ids=enrolled_student_ids
+        enrolled_student_ids=enrolled_student_ids,
+        batch_form=batch_form,
+        available_students=available_students
     )
 
 @admin.route('/subjects/<int:subject_id>/students/add', methods=['POST'])
 @login_required
 @admin_required
 def add_student_to_subject(subject_id):
-    subject = Subject.query.get_or_404(subject_id)
-    
-    # Verify subject belongs to admin's school
-    if subject.school_id != current_user.school_id:
-        flash('You do not have permission to modify this subject.', 'danger')
+    try:
+        subject = Subject.query.get_or_404(subject_id)
+        
+        # Verify subject belongs to admin's school
+        if subject.school_id != current_user.school_id:
+            flash('You do not have permission to modify this subject.', 'danger')
+            return redirect(url_for('admin.subjects_list'))
+        
+        student_id = request.form.get('student_id')
+        if not student_id:
+            flash('No student selected.', 'danger')
+            return redirect(url_for('admin.subject_students', subject_id=subject_id))
+        
+        student = User.query.get_or_404(int(student_id))
+        
+        # Check if student belongs to this school and has student role
+        if student.school_id != current_user.school_id or not student.is_student():
+            flash('Invalid student selection.', 'danger')
+            return redirect(url_for('admin.subject_students', subject_id=subject_id))
+        
+        # Check if student is already enrolled
+        if student in subject.students:
+            flash(f'Student {student.full_name} is already enrolled in this subject.', 'warning')
+        else:
+            subject.students.append(student)
+            db.session.commit()
+            flash(f'Student {student.full_name} has been enrolled in {subject.name}.', 'success')
+        
+        return redirect(url_for('admin.subject_students', subject_id=subject_id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {str(e)}', 'danger')
         return redirect(url_for('admin.subjects_list'))
-    
-    student_id = request.form.get('student_id')
-    if not student_id:
-        flash('No student selected.', 'danger')
-        return redirect(url_for('admin.subject_students', subject_id=subject_id))
-    
-    student = User.query.get_or_404(int(student_id))
-    
-    # Check if student belongs to this school and has student role
-    if student.school_id != current_user.school_id or not student.is_student():
-        flash('Invalid student selection.', 'danger')
-        return redirect(url_for('admin.subject_students', subject_id=subject_id))
-    
-    # Check if student is already enrolled
-    if student in subject.students:
-        flash(f'Student {student.full_name} is already enrolled in this subject.', 'warning')
-    else:
-        subject.students.append(student)
-        db.session.commit()
-        flash(f'Student {student.full_name} has been enrolled in {subject.name}.', 'success')
-    
-    return redirect(url_for('admin.subject_students', subject_id=subject_id))
 
 @admin.route('/subjects/<int:subject_id>/students/<int:student_id>/remove', methods=['POST'])
 @login_required
 @admin_required
 def remove_student_from_subject(subject_id, student_id):
-    subject = Subject.query.get_or_404(subject_id)
-    
-    # Verify subject belongs to admin's school
-    if subject.school_id != current_user.school_id:
-        flash('You do not have permission to modify this subject.', 'danger')
+    try:
+        subject = Subject.query.get_or_404(subject_id)
+        
+        # Verify subject belongs to admin's school
+        if subject.school_id != current_user.school_id:
+            flash('You do not have permission to modify this subject.', 'danger')
+            return redirect(url_for('admin.subjects_list'))
+        
+        student = User.query.get_or_404(student_id)
+        
+        # Check if student is enrolled
+        if student not in subject.students:
+            flash(f'Student {student.full_name} is not enrolled in this subject.', 'warning')
+        else:
+            subject.students.remove(student)
+            db.session.commit()
+            flash(f'Student {student.full_name} has been removed from {subject.name}.', 'success')
+        
+        return redirect(url_for('admin.subject_students', subject_id=subject_id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'An error occurred: {str(e)}', 'danger')
         return redirect(url_for('admin.subjects_list'))
-    
-    student = User.query.get_or_404(student_id)
-    
-    # Check if student is enrolled
-    if student not in subject.students:
-        flash(f'Student {student.full_name} is not enrolled in this subject.', 'warning')
-    else:
-        subject.students.remove(student)
-        db.session.commit()
-        flash(f'Student {student.full_name} has been removed from {subject.name}.', 'success')
-    
-    return redirect(url_for('admin.subject_students', subject_id=subject_id))
 
 # Schedules Management
 @admin.route('/schedules')

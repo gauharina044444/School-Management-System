@@ -30,6 +30,7 @@ class SubjectForm(FlaskForm):
     grade_level = StringField('Grade Level', validators=[Length(max=20)])
     credits = FloatField('Credits', validators=[NumberRange(min=0)])
     teachers = SelectMultipleField('Assign Teachers', coerce=int, validators=[DataRequired()])
+    students = SelectMultipleField('Enroll Students', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Subject')
 
 class ScheduleForm(FlaskForm):
@@ -62,3 +63,7 @@ class ScheduleItemForm(FlaskForm):
     def validate_end_time(self, end_time):
         if end_time.data <= self.start_time.data:
             raise ValidationError('End time must be after start time.')
+
+class StudentEnrollmentForm(FlaskForm):
+    student_ids = SelectMultipleField('Select Students', coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Enroll Selected Students')

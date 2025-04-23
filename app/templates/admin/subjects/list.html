@@ -21,6 +21,7 @@
                                 <th>Grade Level</th>
                                 <th>Credits</th>
                                 <th>Teachers</th>
+                                <th>Students</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -39,8 +40,11 @@
                                         {% endfor %}
                                     </td>
                                     <td>
-                                        <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <a href="{{ url_for('admin.subject_students', subject_id=subject.id) }}" class="btn btn-sm btn-outline-info">Manage Students</a>
+                                        <span class="badge bg-primary">{{ subject.students|length }} students</span>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/subjects/{{ subject.id }}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a href="/admin/subjects/{{ subject.id }}/students" class="btn btn-sm btn-outline-info">Manage Students</a>
                                     </td>
                                 </tr>
                             {% endfor %}

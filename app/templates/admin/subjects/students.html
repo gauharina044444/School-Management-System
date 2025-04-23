@@ -6,7 +6,7 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Students - {{ subject.name }}</h1>
-        <a href="{{ url_for('admin.subjects_list') }}" class="btn btn-outline-secondary">Back to Subjects</a>
+        <a href="/admin/subjects" class="btn btn-outline-secondary">Back to Subjects</a>
     </div>
     
     <div class="card mb-4">
@@ -62,7 +62,7 @@
                                             <td>{{ student.full_name }}</td>
                                             <td>{{ student.email }}</td>
                                             <td>
-                                                <form method="POST" action="{{ url_for('admin.remove_student_from_subject', subject_id=subject.id, student_id=student.id) }}" onsubmit="return confirm('Are you sure you want to remove this student from the subject?');">
+                                                <form method="POST" action="/admin/subjects/{{ subject.id }}/students/{{ student.id }}/remove" onsubmit="return confirm('Are you sure you want to remove this student from the subject?');">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                                                 </form>
                                             </td>
@@ -84,26 +84,50 @@
                     <h5 class="mb-0">Add Student to Subject</h5>
                 </div>
                 <div class="card-body">
-                    {% set available_students = [] %}
-                    {% for student in students %}
-                        {% if student.id not in enrolled_student_ids %}
-                            {% set available_students = available_students + [student] %}
-                        {% endif %}
-                    {% endfor %}
-                    
                     {% if available_students %}
-                        <form method="POST" action="{{ url_for('admin.add_student_to_subject', subject_id=subject.id) }}">
-                            <div class="form-group mb-3">
-                                <label for="student_id" class="form-label">Select Student</label>
-                                <select id="student_id" name="student_id" class="form-select">
-                                    <option value="">-- Select Student --</option>
-                                    {% for student in available_students %}
-                                        <option value="{{ student.id }}">{{ student.full_name }} ({{ student.email }})</option>
-                                    {% endfor %}
-                                </select>
+                        <ul class="nav nav-tabs mb-3" id="enrollmentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single-enrollment" type="button" role="tab">
+                                    Single Enrollment
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch-enrollment" type="button" role="tab">
+                                    Batch Enrollment
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="enrollmentTabsContent">
+                            <!-- Single Student Enrollment Tab -->
+                            <div class="tab-pane fade show active" id="single-enrollment" role="tabpanel">
+                                <form method="POST" action="/admin/subjects/{{ subject.id }}/students/add">
+                                    <div class="form-group mb-3">
+                                        <label for="student_id" class="form-label">Select Student</label>
+                                        <select id="student_id" name="student_id" class="form-select">
+                                            <option value="">-- Select Student --</option>
+                                            {% for student in available_students %}
+                                                <option value="{{ student.id }}">{{ student.full_name }} ({{ student.email }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Student</button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn btn-primary">Add Student</button>
-                        </form>
+                            
+                            <!-- Batch Enrollment Tab -->
+                            <div class="tab-pane fade" id="batch-enrollment" role="tabpanel">
+                                <form method="POST" action="/admin/subjects/{{ subject.id }}/students">
+                                    {{ batch_form.hidden_tag() }}
+                                    <div class="form-group mb-3">
+                                        <label for="student_ids" class="form-label">Select Multiple Students</label>
+                                        {{ batch_form.student_ids(class="form-select", size=10, multiple=True) }}
+                                        <small class="form-text text-muted">Hold Ctrl (or Cmd on Mac) to select multiple students</small>
+                                    </div>
+                                    {{ batch_form.submit(class="btn btn-primary") }}
+                                </form>
+                            </div>
+                        </div>
                     {% else %}
                         <div class="alert alert-info">All available students are already enrolled in this subject.</div>
                     {% endif %}
