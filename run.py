@@ -1,6 +1,7 @@
 from app import create_app
 from flask import render_template
 from datetime import datetime
+import os
 
 app = create_app()
 
@@ -26,4 +27,8 @@ if __name__ == '__main__':
     for rule in sorted(app.url_map.iter_rules(), key=lambda x: str(x)):
         print(f"{rule.endpoint}: {rule.rule}")
     
-    app.run(debug=True)
+    port = int(os.environ.get('FLASK_RUN_PORT', 5002))
+    host = os.environ.get('FLASK_RUN_HOST', '0.0.0.0')
+    debug = os.environ.get('FLASK_ENV', 'development') == 'development'
+    
+    app.run(host=host, port=port, debug=debug)

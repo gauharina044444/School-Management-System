@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: school_management_app
+    restart: always
+    ports:
+      - "5002:5002"
+    volumes:
+      - db_data:/data
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:////data/school_management.db
+      - FLASK_ENV=development
+    command: >
+      bash -c "python -c 'from run import app; app.app_context().push(); from app import db; db.create_all()' &&
+              python run.py"
+
+volumes:
+  db_data:
+    name: school_management_data
